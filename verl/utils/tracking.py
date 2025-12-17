@@ -69,7 +69,7 @@ class Tracking(object):
                          experiment_name=experiment_name,
                          config={
                              "FRAMEWORK": "veRL",
-                             **config
+                             **(config if config is not None else {})
                          },
                          logdir=SWANLAB_LOG_DIR,
                          mode=SWANLAB_MODE)
