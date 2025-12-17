@@ -47,6 +47,7 @@ pip3 install vllm==0.6.3 ray
 pip3 install flash-attn --no-build-isolation
 pip install -e .  # For verl integration
 pip install wandb IPython matplotlib
+pip install swanlab  # If needed
 ```
 
 ---

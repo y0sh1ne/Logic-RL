@@ -22,7 +22,7 @@ from typing import List, Union, Dict, Any
 
 
 class Tracking(object):
-    supported_backend = ['wandb', 'mlflow', 'console']
+    supported_backend = ['wandb', 'mlflow', 'console', 'swanlab']
 
     def __init__(self, project_name, experiment_name, default_backend: Union[str, List[str]] = 'console', config=None):
         if isinstance(default_backend, str):
@@ -56,11 +56,32 @@ class Tracking(object):
             self.console_logger = LocalLogger(print_to_console=True)
             self.logger['console'] = self.console_logger
 
+        if "swanlab" in default_backend:
+            import swanlab
+            import os
+
+            SWANLAB_API_KEY = os.environ.get("SWANLAB_API_KEY", None)
+            SWANLAB_LOG_DIR = os.environ.get("SWANLAB_LOG_DIR", "swanlog")
+            SWANLAB_MODE = os.environ.get("SWANLAB_MODE", "cloud")
+            if SWANLAB_API_KEY:
+                swanlab.login(SWANLAB_API_KEY)  # NOTE: previous login information will be overwritten
+            swanlab.init(project=project_name,
+                         experiment_name=experiment_name,
+                         config=config,
+                         logdir=SWANLAB_LOG_DIR,
+                         mode=SWANLAB_MODE)
+            self.logger["swanlab"] = swanlab
+
     def log(self, data, step, backend=None):
         for default_backend, logger_instance in self.logger.items():
             if backend is None or default_backend in backend:
                 logger_instance.log(data=data, step=step)
-
+    
+    def __del__(self):
+        if 'wandb' in self.logger:
+            self.logger['wandb'].finish(exit_code=0)
+        if 'swanlab' in self.logger:
+            self.logger['swanlab'].finish()
 
 class _MlflowLoggingAdapter:
 
